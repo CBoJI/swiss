@@ -17,6 +17,13 @@ peer, без прохождения сообщения через промежу
 pip install -r requirements.txt
 
 Перед началом работы отредактируйте настройки config.py:
+
 SIGNAL_SERVER_IP = '188.166.1.106'  # расположен на "белом" IP, можно не изменять
 
+==========================================================
+
+запуск:
+1) python signal_server.py
+2) python server.py
+3) python client.py
 
