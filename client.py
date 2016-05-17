@@ -19,8 +19,8 @@ if __name__ == '__main__':
         print 'server is offline'
         sys.exit(1)
 
-    data = raw_input('write to server: ')
-    if not data:
+    msg = raw_input('write to server: ')
+    if not msg:
         sys.exit(1)
 
     network.udp_send(data['server']['ip'], data['server']['port'], data)
