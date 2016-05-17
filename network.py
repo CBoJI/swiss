@@ -1,14 +1,20 @@
 # encoding: utf-8
 
-from contextlib import closing
-from socket import socket, AF_INET, SOCK_DGRAM
+import sys
+import socket
 import json
+from contextlib import closing
+
 import stun
+
 from helpers import stoppable, safe_str, safe_unicode
 
+from config import STUN_HOST
+
+
 SIGNAL_SERVER_RECORDS = {
-    'server': {'ip': '', 'port': ''},
-    'client': {'ip': '', 'port': ''},
+    'server': {'ip': '', 'port': '', 'status': 'off'},
+    'client': {'ip': '', 'port': '', 'status': 'off'},
 }
 
 
@@ -24,7 +30,8 @@ def publish_public_address(host, port, server=False):
     print '-' * 80
     print 'Connecting to STUN server'
 
-    nat_type, external_ip, external_port = stun.get_ip_info()
+    nat_type, external_ip, external_port = stun.get_ip_info(stun_host=STUN_HOST)
+
     print '\tSTUN data:', nat_type, external_ip, external_port
 
     print '-' * 80
@@ -38,6 +45,7 @@ def publish_public_address(host, port, server=False):
     if server:
         data['type'] = 'server'
     data = json.dumps(data)
+
     return udp_send(host, port, data)
 
 
@@ -51,13 +59,18 @@ def udp_send(host, port, data):
     :return: received data
     """
 
-    # ensure that socket will be closed
     result = None
-    with closing(socket(AF_INET, SOCK_DGRAM)) as udp_socket:  # SOCK_DGRAM for UDP
+    # ensure that socket will be closed
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_DGRAM)) as udp_socket:  # SOCK_DGRAM for UDP
         data = safe_str(data)
         udp_socket.sendto(data, (host, port))
 
-        data, addr = udp_socket.recvfrom(1024)
+        try:
+            data, addr = udp_socket.recvfrom(1024)
+        except socket.timeout, e:
+            print 'Host not available: %s %s' % (host, port)
+            sys.exit(1)
+
         data = safe_unicode(data)
         result = data
         print '\t%s' % data
@@ -67,6 +80,8 @@ def udp_send(host, port, data):
 
 @stoppable
 def server(udp_socket):
+    """ server logic """
+
     # ensure that socket will be closed
     with closing(udp_socket) as udp_socket:
         print 'Start listening...'
@@ -80,29 +95,36 @@ def server(udp_socket):
 
 @stoppable
 def signal_server(udp_socket):
+    """ signal_server logic """
+
     # ensure that socket will be closed
     with closing(udp_socket) as udp_socket:
         print 'Start listening...'
         while True:
-            data, addr = udp_socket.recvfrom(1024)  # receives UPD message and clients address
+            data, addr = udp_socket.recvfrom(2048)  # receives UPD message and clients address
             print '\tclient connected %s %s' % (addr)
             print '\treceived data:   %s' % data
 
             data = safe_unicode(data)
-            data = json.loads(data)
+            try:
+                data = json.loads(data)
+            except ValueError, e:
+                print '\tWrong data'
+                msg = {'error': 'not json data'}
+            else:
+                client_type = data['type']
+                external_ip = data['external_ip']
+                external_port = data['external_port']
 
-            type = data['type']
-            external_ip = data['external_ip']
-            external_port = data['external_port']
+                SIGNAL_SERVER_RECORDS[client_type]['ip'] = external_ip
+                SIGNAL_SERVER_RECORDS[client_type]['port'] = external_port
+                SIGNAL_SERVER_RECORDS[client_type]['status'] = 'on'
 
-            SIGNAL_SERVER_RECORDS[type]['ip'] = external_ip
-            SIGNAL_SERVER_RECORDS[type]['port'] = external_port
-
-            msg = {
-                'status': 'address published',
-            }
-            if type == 'client':
-                msg.update({'server': SIGNAL_SERVER_RECORDS['server']})
+                msg = {
+                    'status': 'address published',
+                }
+                if client_type == 'client':
+                    msg.update({'server': SIGNAL_SERVER_RECORDS['server']})
 
             msg = json.dumps(msg)
             msg = safe_str(msg)

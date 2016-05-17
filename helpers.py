@@ -2,6 +2,7 @@
 
 
 def stoppable(func):
+    """ break by ctrl+c """
     def wrapper(s):
         print '-' * 80
         print 'Press Ctrl+C to stop.'

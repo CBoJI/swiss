@@ -1,16 +1,23 @@
 # encoding: utf-8
 
-from socket import socket, AF_INET, SOCK_DGRAM
+import sys
+import json
+import socket
 
 import network
-from config import SERVER_ADDRESS, SIGNAL_SERVER_ADDRESS
+
+from config import SIGNAL_SERVER_IP, SIGNAL_SERVER_PORT, SERVER_PORT
+
 
 if __name__ == '__main__':
-    print 'Start on %s %s' % SERVER_ADDRESS
+    print 'Start on %s' % SERVER_PORT
 
-    udp_socket = socket(AF_INET, SOCK_DGRAM)  # SOCK_DGRAM uses for UDP
-    udp_socket.bind(SERVER_ADDRESS)
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # SOCK_DGRAM uses for UDP
+    udp_socket.bind(('', SERVER_PORT))
 
-    network.publish_public_address(*SIGNAL_SERVER_ADDRESS, server=True)
+    result = network.publish_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT, server=True)
+    result = json.loads(result)
+    if 'error' in result:
+        sys.exit(1)
 
     network.server(udp_socket)

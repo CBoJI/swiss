@@ -1,30 +1,28 @@
 # encoding: utf-8
 
 import sys
-from socket import socket, AF_INET, SOCK_DGRAM
 import json
 
 import network
-from config import SIGNAL_SERVER_ADDRESS
-from helpers import safe_str, safe_unicode
+
+from config import SIGNAL_SERVER_IP, SIGNAL_SERVER_PORT
 
 
 if __name__ == '__main__':
-    data = network.publish_public_address(*SIGNAL_SERVER_ADDRESS)
+    data = network.publish_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT)
     data = json.loads(data)
-    server_address = (data['server']['ip'], data['server']['port'])
-    udp_socket = socket(AF_INET, SOCK_DGRAM)  # SOCK_DGRAM uses for UDP
 
-    data = raw_input('write to server: ')
-    if not data :
-        udp_socket.close()
+    if 'error' in data:
         sys.exit(1)
 
-    data = safe_str(data)
-    udp_socket.sendto(data, server_address)
+    if data['server']['status'] == 'off':
+        print 'server is offline'
+        sys.exit(1)
 
-    data = safe_unicode(data)
-    data = udp_socket.recvfrom(1024)
-    print(data)
+    server_address = (data['server']['ip'], data['server']['port'])
 
-    udp_socket.close()
+    data = raw_input('write to server: ')
+    if not data:
+        sys.exit(1)
+
+    network.udp_send(server_address[0], server_address[1], data)
