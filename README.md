@@ -23,7 +23,10 @@ SIGNAL_SERVER_IP = '188.166.1.106'  # расположен на "белом" IP,
 ==========================================================
 
 запуск:
+
 1) python signal_server.py
+
 2) python server.py
+
 3) python client.py
 
