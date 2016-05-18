@@ -7,7 +7,7 @@ from contextlib import closing
 
 from helpers import stoppable, safe_str, safe_unicode, get_ip_info_by_socket
 
-from config import STUN_HOST, SERVER_PORT
+from config import STUN_HOST, SERVER_PORT, STUN_PORT
 
 
 SIGNAL_SERVER_RECORDS = {
@@ -30,7 +30,8 @@ def publish_public_address(s, host, port, server=False):
     print 'Connecting to STUN server'
 
     # nat_type, external_ip, external_port = stun.get_ip_info(stun_host=STUN_HOST)
-    nat_type, external_ip, external_port = get_ip_info_by_socket(s, stun_host=STUN_HOST, source_port=SERVER_PORT)
+    nat_type, external_ip, external_port = get_ip_info_by_socket(s, stun_host=STUN_HOST, stun_port=STUN_PORT,
+                                                                 source_port=SERVER_PORT)
 
     print '\tSTUN data:', nat_type, external_ip, external_port
 

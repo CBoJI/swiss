@@ -2,6 +2,7 @@
 
 import sys
 import json
+import socket
 
 import network
 
@@ -10,6 +11,8 @@ from config import SIGNAL_SERVER_IP, SIGNAL_SERVER_PORT
 
 if __name__ == '__main__':
     # data = network.publish_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT)
+
+    socket.setdefaulttimeout(2)
 
     data = {
         'type': 'client',

@@ -6,4 +6,6 @@ SIGNAL_SERVER_PORT = 5000
 
 SERVER_PORT = 5001
 
-STUN_HOST = None  # leave None if you don't have your own STUN server
+STUN_HOST = 'stun.l.google.com'  # it's better to use STUN servers with good ping (STUN servers form the pystun module are bad)
+
+STUN_PORT = 19302

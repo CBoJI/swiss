@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+import sys
+
 import stun
 
 
@@ -45,5 +47,10 @@ def get_ip_info_by_socket(s, source_ip="0.0.0.0", source_port=54320, stun_host=N
 
     external_ip = nat['ExternalIP']
     external_port = nat['ExternalPort']
+
+    if nat_type != 'Full Cone':
+        print '\tSTUN data:', nat_type, external_ip, external_port
+        print "It's not Full Cone NAT. Close."
+        sys.exit(0)
 
     return (nat_type, external_ip, external_port)
