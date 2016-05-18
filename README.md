@@ -31,7 +31,7 @@ SIGNAL_SERVER_IP = '188.166.1.106'  # расположен на "белом" IP,
 
 запуск:
 
-1) python signal_server.py
+1) python signal_server.py  (если не изменяли SIGNAL_SERVER_IP, то не выполняйте 1 пункт)
 
 2) python server.py
 
