@@ -5,11 +5,9 @@ import socket
 import json
 from contextlib import closing
 
-import stun
+from helpers import stoppable, safe_str, safe_unicode, get_ip_info_by_socket
 
-from helpers import stoppable, safe_str, safe_unicode
-
-from config import STUN_HOST
+from config import STUN_HOST, SERVER_PORT
 
 
 SIGNAL_SERVER_RECORDS = {
@@ -18,10 +16,11 @@ SIGNAL_SERVER_RECORDS = {
 }
 
 
-def publish_public_address(host, port, server=False):
+def publish_public_address(s, host, port, server=False):
     """
     Get public address by STUN and publish it to the signal server
 
+    :param s: udp socket
     :param host: destination host of signal server
     :param port: destination port of signal server
     :param server: specify server or client is published
@@ -30,7 +29,8 @@ def publish_public_address(host, port, server=False):
     print '-' * 80
     print 'Connecting to STUN server'
 
-    nat_type, external_ip, external_port = stun.get_ip_info(stun_host=STUN_HOST)
+    # nat_type, external_ip, external_port = stun.get_ip_info(stun_host=STUN_HOST)
+    nat_type, external_ip, external_port = get_ip_info_by_socket(s, stun_host=STUN_HOST, source_port=SERVER_PORT)
 
     print '\tSTUN data:', nat_type, external_ip, external_port
 
@@ -46,6 +46,10 @@ def publish_public_address(host, port, server=False):
         data['type'] = 'server'
     data = json.dumps(data)
 
+    return udp_send(host, port, data)
+
+
+def get_server_public_address(host, port, data):
     return udp_send(host, port, data)
 
 
@@ -82,6 +86,7 @@ def udp_send(host, port, data):
 def server(udp_socket):
     """ server logic """
 
+    # socket.setdefaulttimeout(None)
     # ensure that socket will be closed
     with closing(udp_socket) as udp_socket:
         print 'Start listening...'
@@ -101,7 +106,7 @@ def signal_server(udp_socket):
     with closing(udp_socket) as udp_socket:
         print 'Start listening...'
         while True:
-            data, addr = udp_socket.recvfrom(2048)  # receives UPD message and clients address
+            data, addr = udp_socket.recvfrom(1024)  # receives UPD message and clients address
             print '\tclient connected %s %s' % (addr)
             print '\treceived data:   %s' % data
 

@@ -9,7 +9,16 @@ from config import SIGNAL_SERVER_IP, SIGNAL_SERVER_PORT
 
 
 if __name__ == '__main__':
-    data = network.publish_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT)
+    # data = network.publish_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT)
+
+    data = {
+        'type': 'client',
+        'external_ip': '',
+        'external_port': ''
+    }
+    data = json.dumps(data)
+    data = network.get_server_public_address(host=SIGNAL_SERVER_IP, port=SIGNAL_SERVER_PORT, data=data)
+
     data = json.loads(data)
 
     if 'error' in data:
